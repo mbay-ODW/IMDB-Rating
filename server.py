@@ -48,10 +48,10 @@ def plot_png():
             result = json.loads(response.text.encode('utf8'))
             if result["errorMessage"] == "Invalid API Key":
                 flash("Incorrect API key")
-                return render_template('./home.html')
+                return redirect('/home')
             if not result["results"]:
                 flash("No Serieses found")
-                return render_template('./home.html')
+                return redirect('/home')
             imDbId = result["results"][0]["id"]
             logger.debug(request.args)
             logger.debug(title)
@@ -107,11 +107,11 @@ def plot_png():
             # Embed the result in the html output.
             data = base64.b64encode(buf.getbuffer()).decode("ascii")
             return f"<img src='data:image/png;base64,{data}'/>"
-        except e as Exception:
+        except Exception as e:
             flash(f'The following error occured: {e}')
-            return render_template('./home.html')
+            return redirect('/home')
     else:
-        return render_template('./home.html')
+        return redirect('/home')
 
 def create_trend(y):
             a = []
