@@ -17,6 +17,7 @@ import urllib.parse
 import os
 
 token = os.getenv("TOKEN", default="k_123456789")
+
 app = Flask(__name__,static_url_path='/static')
 app.config['SESSION_TYPE'] = 'memcached'
 app.config['SECRET_KEY'] = 'super secret key'
@@ -24,8 +25,12 @@ app.config['DEBUG'] = True
 
 logger = logging.getLogger('Server Logging')
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 logger.info('Logger for Upload Server was initialized')
 
+@app.route('/', methods=['GET'])
+def base():
+    return redirect('/home')
 
 
 @app.route('/home', methods=['GET'])
@@ -74,6 +79,7 @@ def plot_png():
                         # No more seasons left
                         logger.debug("Breaking the loop")
                         # Creating overall Trend
+                        y = allRatings
                         trend_x, p = create_trend(y)
                         ax.plot(trend_x,p(trend_x),"r--")
                     except:
@@ -84,23 +90,33 @@ def plot_png():
                     ratings[f'S{season}E{i["episodeNumber"]}'] = i["imDbRating"]
                 episodeNumber = []
                 rating = []
-                for i in ratings:
-                    episodeNumber.append(i)
-                    rating.append(float(ratings[i]))
-                    # Collecting all episodes and ratings for overall trend
-                    allRatings.append(float(ratings[i]))
-                x = episodeNumber
-                y = rating
-                mean = sum(rating)/len(rating)
-                trend_x, p = create_trend(y)
-                ax.plot(trend_x,p(trend_x),"r--")
-                if season%2:
-                    ax.plot(x,y,x,y,"or")
-                else:
-                    ax.plot(x,y,x,y,"oy")
-                ax.hlines(mean,x[0],x[-1])
-                season += 1
-            
+                logger.debug(f'Rating array looks the following: {ratings}')
+                # Trying to extract ratings of every episode, sometimes new season is already listet but without rating
+                try:
+                    for i in ratings:
+                        episodeNumber.append(i)
+                        logger.debug(f'The episode {i} has rating {ratings[i]}')
+                        rating.append(float(ratings[i]))
+                        # Collecting all episodes and ratings for overall trend
+                        allRatings.append(float(ratings[i]))
+                    x = episodeNumber
+                    y = rating
+                    #trend_x, p = create_trend(y)
+                    #ax.plot(trend_x,p(trend_x),"r--")
+                    if season%2:
+                        ax.stem(x,y,linefmt='C7--', markerfmt='C1o-', bottom=0, basefmt='')
+                    else:
+                        ax.stem(x,y,linefmt='C7--', markerfmt='C0o-', bottom=0, basefmt='')
+                except:
+                    pass
+                finally:
+                    season += 1
+            ax.set_yticks([0,2,4,6,8,10])
+            ax.axis(ymin=0,ymax=10*1.1,xmin=-1,xmax=len(allRatings))
+            fig.set_dpi(120)
+            fig.autofmt_xdate(bottom=0.2, rotation=90, ha='center', which='major')
+            ax.autoscale(enable=True, axis='x')
+            fig.suptitle(f'{request.form["title"]}', fontsize=16)
             # Save it to a temporary buffer.
             buf = BytesIO()
             fig.savefig(buf, format="png")

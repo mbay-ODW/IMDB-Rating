@@ -20,7 +20,6 @@ for i in ratings:
                 # Collecting all episodes and ratings for overall trend
                 allEpisodes.append(i)
                 allRatings.append(float(ratings[i]))
-print(allEpisodes)
 x = episodeNumber
 y = rating
 
@@ -30,12 +29,14 @@ for i in range(len(y)):
 test_x = np.array(a)
 test_y = np.array(y)
 
-z = np.polyfit(test_x, test_y, 1)
-p = np.poly1d(z)
-ax.plot(test_x,p(test_x),"r--")
-mean = sum(rating)/len(rating)
-ax.plot(x,y,x,y,"or")
+#z = np.polyfit(test_x, test_y, 1)
+#p = np.poly1d(z)
+#ax.plot(test_x,p(test_x),"r--")
+#mean = sum(rating)/len(rating)
+ax.stem(x,y,linefmt='C7--', markerfmt='C1o-', bottom=0, basefmt='none')
 ax.set_xlabel('Episode')
 ax.set_ylabel('ImDB Rating')
+ax.set_yticks([0,2,4,6,8,10])
+ax.axis(ymin=0,ymax=10*1.1,xmin=-1,xmax=len(allRatings))
 fig.suptitle(f'Breaking Bad', fontsize=16)
 fig.savefig("./test.png", format="png")
